@@ -1,29 +1,23 @@
 <?php
 
-use App\Http\Controllers\MovieController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MovieController;
 
-// Root route for welcome page
-Route::get('/', function () {
-    return view('welcome');
-});
+// Redirect root to movies from TMDb API
+Route::get('/', [MovieController::class, 'movies'])->name('movies.api-index');
 
-// Route for dashboard page (requires auth and email verification)
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// Grouped routes that require authentication
-Route::middleware('auth')->group(function () {
-    // Resource routes for managing movies (CRUD operations)
-    Route::resource('movies', MovieController::class);
-    
-    // Profile-related routes (edit, update, delete)
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-// Require the authentication routes (Laravel Breeze or other auth package)
+// Authentication Routes
 require __DIR__.'/auth.php';
+
+// Movies from TMDb API
+Route::get('/movies/api', [MovieController::class, 'movies'])->name('movies.api-index');
+
+// User's Movies (requires authentication)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/my-movies', [MovieController::class, 'index'])->name('movies.index');
+    Route::get('/movies/create', [MovieController::class, 'create'])->name('movies.create');
+    Route::post('/movies', [MovieController::class, 'store'])->name('movies.store');
+    Route::get('/movies/{movie}/edit', [MovieController::class, 'edit'])->name('movies.edit');
+    Route::put('/movies/{movie}', [MovieController::class, 'update'])->name('movies.update');
+    Route::delete('/movies/{movie}', [MovieController::class, 'destroy'])->name('movies.destroy');
+});

@@ -2,50 +2,64 @@
 
 namespace App\Services;
 
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TMDbService
 {
-    protected $client;
     protected $apiKey;
-    protected $bearerToken;
+    protected $baseUrl;
 
     public function __construct()
     {
-        // Initialize the Guzzle client
-        $this->client = new Client();
-
-        // Retrieve API Key and Bearer Token from environment variables
-        $this->apiKey = env('TMDB_API_KEY');
-        $this->bearerToken = env('TMDB_BEARER_TOKEN');
-        
-        // Log the values to verify
-        \Log::info('API Key: ' . $this->apiKey);
-        \Log::info('Bearer Token: ' . $this->bearerToken);
+        // **Hardcoded API Key**
+        $this->apiKey  = 'eb585d064d58ee87c333b4a33f97ec21';
+        $this->baseUrl = 'https://api.themoviedb.org/3';
     }
 
-    // Method to fetch "now playing" movies from TMDb API
+    // Fetch now playing movies
     public function getNowPlayingMovies()
     {
-        try {
-            // Send a request to TMDb API endpoint
-            $response = $this->client->request('GET', 'https://api.themoviedb.org/3/movie/now_playing', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->bearerToken,
-                    'Accept' => 'application/json',
-                ],
-                'query' => [
-                    'api_key' => $this->apiKey,  // Use the API key here
-                    'language' => 'en-US',
-                    'page' => 1,
-                ],
+        $response = Http::get("{$this->baseUrl}/movie/now_playing", [
+            'api_key'  => $this->apiKey,
+            'language' => 'en-US',
+            'region'   => 'US',
+        ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            // Log the error
+            Log::error('TMDb API Error (Now Playing):', [
+                'status' => $response->status(),
+                'error'  => $response->body(),
             ]);
 
-            // Decode JSON response to an associative array
-            return json_decode($response->getBody(), true);
-        } catch (\Exception $e) {
-            // Log error and return empty array to avoid breaking
-            \Log::error('Failed to fetch movies: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Fetch genres
+    public function getGenres()
+    {
+        $response = Http::get("{$this->baseUrl}/genre/movie/list", [
+            'api_key'  => $this->apiKey,
+            'language' => 'en-US',
+        ]);
+
+        if ($response->successful()) {
+            $genres = [];
+            foreach ($response->json()['genres'] as $genre) {
+                $genres[$genre['id']] = $genre['name'];
+            }
+            return $genres;
+        } else {
+            // Log the error
+            Log::error('TMDb API Error (Genres):', [
+                'status' => $response->status(),
+                'error'  => $response->body(),
+            ]);
+
             return [];
         }
     }

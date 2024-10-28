@@ -1,82 +1,42 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-10 bg-orange-100 dark:bg-gray-900 rounded-lg shadow-md p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-orange-800 dark:text-orange-300">
-            🍁 Cozy Movie List 🍁
-        </h1>
-        <a href="{{ route('movies.create') }}" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition ease-in-out duration-200">
-            Add New Movie
-        </a>
-    </div>
+<div class="container mx-auto py-10">
+    <h1 class="text-3xl font-bold text-orange-800 dark:text-orange-300 mb-6">🎥 My Movies</h1>
 
-    <!-- Movie Categories -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <!-- Want to Watch Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md border-2 border-orange-300">
-            <h2 class="text-2xl font-bold text-orange-800 dark:text-orange-200 mb-4">Want to Watch 🍂</h2>
-            @foreach($movies->where('status', 'to_watch') as $movie)
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold">{{ $movie->title }}</h3>
-                    <div class="text-gray-600 dark:text-gray-400">{{ $movie->genre }}</div>
-                    <div class="flex justify-between mt-2">
-                        <a href="{{ route('movies.edit', $movie) }}" class="text-orange-600 hover:text-orange-800">Edit</a>
-                        <form action="{{ route('movies.destroy', $movie) }}" method="POST">
+    @if(session('success'))
+        <div class="bg-green-500 text-white p-4 rounded mb-6">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <!-- List All Movies -->
+    @if($movies->count() > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            @foreach($movies as $movie)
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{ $movie->title }}</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Genre: {{ $movie->genre ?? 'Unknown' }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Status: {{ ucfirst(str_replace('_', ' ', $movie->status)) }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Rating: {{ $movie->rating ? '⭐ ' . $movie->rating . '/10' : 'Not Rated' }}</p>
+                    <div class="mt-4 space-x-2">
+                        <a href="{{ route('movies.edit', $movie) }}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                        <form action="{{ route('movies.destroy', $movie) }}" method="POST" class="inline-block">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600" onclick="return confirm('Are you sure you want to delete this movie?')">Delete</button>
                         </form>
                     </div>
                 </div>
             @endforeach
         </div>
+    @else
+        <p class="text-orange-800 dark:text-orange-300">No movies found.</p>
+    @endif
 
-        <!-- Currently Watching Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md border-2 border-orange-500">
-            <h2 class="text-2xl font-bold text-orange-800 dark:text-orange-200 mb-4">Currently Watching 🎃</h2>
-            @foreach($movies->where('status', 'currently_watching') as $movie)
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold">{{ $movie->title }}</h3>
-                    <div class="text-gray-600 dark:text-gray-400">{{ $movie->genre }}</div>
-                    <div class="flex justify-between mt-2">
-                        <a href="{{ route('movies.edit', $movie) }}" class="text-orange-600 hover:text-orange-800">Edit</a>
-                        <form action="{{ route('movies.destroy', $movie) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Watched Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md border-2 border-blue-500">
-            <h2 class="text-2xl font-bold text-orange-800 dark:text-orange-200 mb-4">Watched ❄️</h2>
-            @foreach($movies->where('status', 'watched') as $movie)
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold">{{ $movie->title }}</h3>
-                    <div class="text-gray-600 dark:text-gray-400">{{ $movie->genre }}</div>
-                    <div class="flex items-center mt-2">
-                        <div class="text-yellow-500 mr-2">Rating:</div>
-                        <div>
-                            @for ($i = 0; $i < $movie->rating; $i++)
-                                ⭐
-                            @endfor
-                        </div>
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <a href="{{ route('movies.edit', $movie) }}" class="text-orange-600 hover:text-orange-800">Edit</a>
-                        <form action="{{ route('movies.destroy', $movie) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            @endforeach
-        </div>
+    <!-- Add Movie Button -->
+    <div class="mt-6">
+        <a href="{{ route('movies.create') }}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add New Movie</a>
     </div>
 </div>
 @endsection
